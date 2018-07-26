@@ -982,6 +982,7 @@ protected:
 			logger_error("fail to call function asrSpeechPacketSend, id:[%d] status:[MSP_AUDIO_INIT]", _id);
 			return FAILURE;
 		}
+		logger("id:[%d] success to send [MSP_AUDIO_INIT] packet", _id);
 
 		// 4.2 continue，向 java 服务端发送[id, MSP_AUDIO_CONTINUE, cur_send_speech_num]，写语音包数据，收取文本包
 		int data_length = wavHeadStruct.size_8 + 8;
@@ -990,7 +991,7 @@ protected:
 		while (num * FRAME_LEN <= data_length) {
 			if ((num + 1) * FRAME_LEN > data_length) {
 
-				logger("speech from[%d] to[%d]\n", num * FRAME_LEN, data_length);
+				logger("id:[%d] speech from[%d] to[%d]\n", _id , num * FRAME_LEN, data_length);
 
 				// 注意这里因为用的是音频文件最后一段肯定不能取整，但是为了满足发送的 packet 大小一致，依然使用SPEECH_PACKET_LEN
 				if (_mrcpClient.asrSpeechPacketSend(_id, speech + num * FRAME_LEN, SPEECH_PACKET_LEN, num, MSP_AUDIO_CONTINUE) != SUCCESS) {
@@ -1000,7 +1001,7 @@ protected:
 
 			} else {
 
-				logger("speech from[%d] to[%d]\n", num * FRAME_LEN, (num + 1) * FRAME_LEN);
+				logger("id:[%d] speech from[%d] to[%d]\n", _id , num * FRAME_LEN, (num + 1) * FRAME_LEN);
 
 				if (_mrcpClient.asrSpeechPacketSend(_id, speech + num * FRAME_LEN, SPEECH_PACKET_LEN, num, MSP_AUDIO_CONTINUE) != SUCCESS) {
 					logger_error("fail to call function asrSpeechPacketSend, id:[%d] status:[MSP_AUDIO_CONTINUE]", _id);
@@ -1009,15 +1010,19 @@ protected:
 
 			}
 			num++;
+			logger("id:[%d] cur_send_speech_num:[%d] success to send [MSP_AUDIO_CONTINUE] packet", _id, num);
 
 			usleep(200 * 1000); // 模拟人说话时间间隙。200ms对应10帧的音频
 
+			logger("id:[%d] status:[MSP_AUDIO_CONTINUE] start to receive text packet", _id);
             // 中间处理过程收取结果
 			asr_trans_result_vec.clear();
 			if (_mrcpClient.asrTextBlockRecv(_id, asr_trans_result_vec, MSP_AUDIO_CONTINUE) == FAILURE) {
 				logger_error("fail to call function asrTextBlockRecv, id:[%d] status:[MSP_AUDIO_CONTINUE]", _id);
 				return FAILURE;
 			}
+			logger("id:[%d] status:[MSP_AUDIO_CONTINUE] success to receive text packet:[%d]", _id, asr_trans_result_vec.size());
+
 			for (int i = 0; i < asr_trans_result_vec.size(); i++) {
 				logger("revice speech trans result, cur_result:[%s %f %s %f], cur_predict:[%s %f %s %f]\n",
 						asr_trans_result_vec[i]._cur_result._transcript, asr_trans_result_vec[i]._cur_result._stability,
@@ -1032,13 +1037,18 @@ protected:
 			logger_error("fail to call function asrSpeechPacketSend, id:[%d] status:[MSP_AUDIO_LAST]", _id);
 			return FAILURE;
 		}
+		logger("id:[%d] success to send [MSP_AUDIO_LAST] packet", _id);
 
         // 4.4 最后收取所有结果
+		logger("id:[%d] status:[MSP_AUDIO_LAST] start to receive text packet", _id);
+
 		asr_trans_result_vec.clear();
 		if (_mrcpClient.asrTextBlockRecv(_id, asr_trans_result_vec, MSP_AUDIO_LAST) == FAILURE) {
 			logger_error("fail to call function asrTextBlockRecv, id:[%d] status:[MSP_AUDIO_LAST]", _id);
 			return FAILURE;
 		}
+		logger("id:[%d] status:[MSP_AUDIO_LAST] success to receive text packet:[%d]", _id, asr_trans_result_vec.size());
+
 		for (int i = 0; i < asr_trans_result_vec.size(); i++) {
 			logger("revice speech trans result, cur_result:[%s %f %s %f], cur_predict:[%s %f %s %f]\n",
 					asr_trans_result_vec[i]._cur_result._transcript, asr_trans_result_vec[i]._cur_result._stability,
