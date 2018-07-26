@@ -1,0 +1,21 @@
+<?xml version="1.0"?>  
+<scene name="Depth">  
+    <surface id="001" type="Camera">  
+        <eye>0 10 10</eye>  
+        <front>0 0 -1</front>  
+        <refUp>0 1 0</refUp>  
+        <fov>90</fov>  
+    </surface>  
+    <surface id="002" type="Sphere">  
+        <center>0 10 -10</center>  
+        <radius>10</radius>  
+    </surface>  
+    <surface id="003" type="Plane">  
+        <direction>0 10 -10</direction>  
+        <distance>10</distance>  
+    </surface>  
+    <yeah id="004" type="apple">  
+        <direction>6 6 6</direction>  
+        <distance>3</distance>  
+    </yeah>    
+</scene>

@@ -1,0 +1,106 @@
+/*
+ * ShmSpeechToText.hpp
+ *
+ *  Created on: 2018年7月9日
+ *      Author: yaoqiaobing
+ */
+
+#ifndef INCLUDE_SHM_SHMSPEECHTOTEXT_HPP_
+#define INCLUDE_SHM_SHMSPEECHTOTEXT_HPP_
+
+#include <pthread.h>
+#include "Shm/ShmBase.hpp"
+#include "Util/EnumUtil.hpp"
+
+/******************************** asr shm  ********************************/
+
+/**
+ * 将相应的枚举类型转为字符串(这种方法很重要)
+ */
+#define FOREACH_SHM_ASR_ITEM_FLAG(CMD) \
+        CMD(ITEM_FLAG_CAN_WRITE_SPEECH) \
+		CMD(ITEM_FLAG_CALL_ASR_WORKING) \
+		CMD(ITEM_FLAG_CAN_GET_TEXT)
+
+/**
+ * 枚举：asr 在共享内存中单条 item 的 flag 表示
+ */
+typedef enum {
+	FOREACH_SHM_ASR_ITEM_FLAG(GENERATE_ENUM)
+} SHM_ASR_ITEM_FLAG_ENUM;
+
+/**
+ * 数组：asr 在共享内存中单条 item 的 flag 表示，用于将枚举转成字符串
+ * 需要加入 static 修饰符，不然该头文件被多次 include 会报错该数组重复定义
+ */
+static const char* SHM_ASR_ITEM_FLAG_ENUM_STRING[] = {
+	FOREACH_SHM_ASR_ITEM_FLAG(GENERATE_STRING)
+};
+
+// 共享内存所存一条数据
+typedef struct ShmSpeechToTextItem {
+	int _id;                                 // 数组编号，从0开始
+	SHM_ASR_ITEM_FLAG_ENUM _flag;            // 0可写入_speech，1正在调用 asr 转成 _text，2可以取用 _text
+	pthread_mutex_t _itemMptr;               // 行锁控制修改_flag
+	char _speech[638014 + 1];                // tts转成的目标语音
+	char _text[1024 + 1];                    // 输入文本
+} ShmSpeechToTextItem;
+
+typedef struct ShmSpeechToTextHead {
+	int _total;                              // 总的共享内存[语音-文本]记录数
+	int _free;                               // 剩余量
+	int _pointIndex;                         // 上次写入语音的共享内存记录数组索引
+	int _offset;                             // 等待分配空间的记录数组与起始位置偏移
+
+	pthread_mutex_t _headMptr;               // 修改共享内存头部锁
+
+	int _shmSize;                            // 分配的共享内存块大小
+	int _itemSize;                           // 单条记录大小
+} ShmSpeechToTextHead;
+
+
+class ShmSpeechToText : public ShmBase {
+public:
+	/*
+	 * 初始化key和共享内存大小
+	 */
+    void init(int shmKey, int shmSpeechToTextItemNum);
+
+	/*
+	 * 共享内存存放总记录数目
+	 */
+	int getShmSpeechToTextItemNum() {
+		return _shmSpeechToTextItemNum;
+	}
+
+	/*
+	 * 1.找到空闲区域flag == 0写入语音记录
+	 * 2.修改item的flag为1
+	 * 3.修改head的free和pointIndex
+	 */
+ 	FUN_STATUS writeSpeechRecordShm(void* shmMemPointStart, ShmSpeechToTextItem& shmSpeechToTextItem);
+
+ 	/**
+ 	 * 1.在指定位置写入文本数据
+ 	 * 2.修改item的flag为2
+ 	 */
+ 	FUN_STATUS writeTextRecordShm(void* shmMemPointStart, int id, ShmSpeechToTextItem& shmSpeechToTextItem);
+
+ 	/**
+ 	 * 1.在指定位置读取文本数据数据
+ 	 */
+ 	FUN_STATUS readSpeechRecordShm(void* shmMemPointStart, int id, ShmSpeechToTextItem& shmSpeechToTextItem);
+
+	/*
+	 * 1.取走处理完生成的语音数据
+	 * 2.修改item的flag为0
+	 * 3.修改head的free
+	 */
+ 	FUN_STATUS readTextRecordShm(void* shmMemPointStart, int id, ShmSpeechToTextItem& shmSpeechToTextItem);
+
+private:
+
+	int _shmSpeechToTextItemNum;                // 配置文件设置的共享内存存储总行数
+};
+
+#endif /* INCLUDE_SHM_SHMSPEECHTOTEXT_HPP_ */
