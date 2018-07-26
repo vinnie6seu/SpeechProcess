@@ -87,7 +87,7 @@ public:
 	/**
 	 * 1.init，找到当次准备写入的id，向 java 服务端发送[id, MSP_AUDIO_INIT]
 	 * 2.continue，向 java 服务端发送[id, MSP_AUDIO_CONTINUE, cur_send_speech_num]，写语音包数据，收取文本包
-	 * 3.last，告知 java 服务端[id, MSP_AUDIO_LAST]
+	 * 3.last，告知 java 服务端[id, MSP_AUDIO_LAST, totalSendPacketNum]
 	 */
 	FUN_STATUS asrSpeechPacketSend(int& id, const char* speech, int len, int cur_send_packet_num, ASR_SPEECH_PACK_STATUS_ENUM speechStatus);
 

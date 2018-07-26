@@ -49,6 +49,10 @@ MrcpClient::~MrcpClient() {
 		if (_shmSpeechToText.procDetachShm((void*) _shmSpeechToTextHead) == FAILURE) {
 			logger_error(_shmSpeechToText.getShmLastError().c_str());
 		}
+	} else if (_clientType == CLIENT_TYPE_ASR_PACKET) {
+		if (_shmSpeechToText.procDetachShm((void*) _shmSpeechToTextHead) == FAILURE) {
+			logger_error(_shmSpeechToText.getShmLastError().c_str());
+		}
 	}
 
 }
@@ -592,6 +596,7 @@ FUN_STATUS MrcpClient::asrSpeechPacketSend(int& id, const char* speech, int len,
 		HttpJson httpJsonStruct;
 //		memset(&httpJsonStruct, '\0', sizeof(HttpJson));	// 不要这样清空，否则下面的acl::gson(json_http, httpJsonStruct);会出错
 		httpJsonStruct.id = id;
+		httpJsonStruct.totalSendPacketNum = cur_send_packet_num;
 		httpJsonStruct.asrSpeechPackStatus = MSP_AUDIO_LAST;
 
 		try {
@@ -656,7 +661,7 @@ FUN_STATUS MrcpClient::asrTextBlockRecv(int id, vector<AsrSpeechTransResult>& as
 
 	// 读转义后生成的文本数据包
 	bool is_exception = false;
-	if (_shmSpeechToText.readTextBlockingQueueBatch(_shmTextToSpeechHead, id, _allBlockingShmQueue[id], asr_trans_result_vec, is_exception, speechStatus) == FAILURE) {
+	if (_shmSpeechToText.readTextBlockingQueueBatch(_shmSpeechToTextHead, id, _allBlockingShmQueue[id], asr_trans_result_vec, is_exception, speechStatus) == FAILURE) {
 
 		logger_error("fail to call fun readTextBlockingQueueBatch");
 
@@ -671,7 +676,7 @@ FUN_STATUS MrcpClient::asrTextBlockRecv(int id, vector<AsrSpeechTransResult>& as
 }
 
 FUN_STATUS MrcpClient::asrExceptionHandle(int id) {
-	if (_shmSpeechToText.callBackExceptionHandle(_shmTextToSpeechHead, id, _allNoBlockingShmQueue[id], _allBlockingShmQueue[id]) == FAILURE) {
+	if (_shmSpeechToText.callBackExceptionHandle(_shmSpeechToTextHead, id, _allNoBlockingShmQueue[id], _allBlockingShmQueue[id]) == FAILURE) {
 		logger_error("fail to call fun callBackExceptionHandle");
 		return FAILURE;
 	}
@@ -1032,8 +1037,8 @@ protected:
 			}
 		}
 
-		// 4.3 last，告知 java 服务端[id, MSP_AUDIO_LAST]
-		if (_mrcpClient.asrSpeechPacketSend(_id, NULL, 0, 0, MSP_AUDIO_LAST) != SUCCESS) {
+		// 4.3 last，告知 java 服务端[id, MSP_AUDIO_LAST, totalSendPacketNum]
+		if (_mrcpClient.asrSpeechPacketSend(_id, NULL, 0, num, MSP_AUDIO_LAST) != SUCCESS) {
 			logger_error("fail to call function asrSpeechPacketSend, id:[%d] status:[MSP_AUDIO_LAST]", _id);
 			return FAILURE;
 		}
