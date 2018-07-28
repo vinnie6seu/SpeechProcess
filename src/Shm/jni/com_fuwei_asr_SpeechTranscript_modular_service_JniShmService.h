@@ -10,7 +10,7 @@ extern "C" {
 /*
  * Class:     com_fuwei_asr_SpeechTranscript_modular_service_JniShmService
  * Method:    JNI_shmInit
- * Signature: (II)V
+ * Signature: (III)V
  */
 JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniShmService_JNI_1shmInit
   (JNIEnv *, jobject, jint, jint, jint);
@@ -58,7 +58,7 @@ void callback_printLogError(JNIEnv *pEnv, jobject object, const char* error);
 /*
  * Class:     com_fuwei_asr_SpeechTranscript_modular_service_JniShmService
  * Method:    JNI_shmSpeechPacketReceive
- * Signature: (Ljava/lang/Integer;ZILjava/lang/Integer;Ljava/lang/Boolean;)[B
+ * Signature: (IZILjava/lang/Integer;Ljava/lang/Boolean;)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniShmService_JNI_1shmSpeechPacketReceive
   (JNIEnv *, jobject, jint, jboolean, jint, jobject, jobject);
@@ -66,12 +66,17 @@ JNIEXPORT jbyteArray JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service
 /*
  * Class:     com_fuwei_asr_SpeechTranscript_modular_service_JniShmService
  * Method:    JNI_shmTextPacketSend
- * Signature: (Ljava/lang/Integer;Lcom/fuwei/asr/SpeechTranscript/modular/controller/AsrResponse;)V
+ * Signature: (ILcom/fuwei/asr/SpeechTranscript/modular/entity/AsrShmResponse;)V
  */
-JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniShmService_JNI_1shmTextPacketSend
+JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniShmService_JNI_1shmTextPacketSend__ILcom_fuwei_asr_SpeechTranscript_modular_entity_AsrShmResponse_2
   (JNIEnv *, jobject, jint, jobject);
 
-JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniShmService_JNI_1shmTextPacketSend
+/*
+ * Class:     com_fuwei_asr_SpeechTranscript_modular_service_JniShmService
+ * Method:    JNI_shmTextPacketSend
+ * Signature: (ILjava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniShmService_JNI_1shmTextPacketSend__ILjava_lang_String_2
   (JNIEnv *, jobject, jint, jstring);
 
 #ifdef __cplusplus

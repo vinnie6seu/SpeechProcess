@@ -332,9 +332,9 @@ static void transAsrResponseData(JNIEnv *pEnv, jobject& asrResponse, AsrSpeechTr
 /*
  * Class:     com_fuwei_asr_SpeechTranscript_modular_service_JniShmService
  * Method:    JNI_shmTextPacketSend
- * Signature: (Ljava/lang/Integer;Lcom/fuwei/asr/SpeechTranscript/modular/controller/AsrResponse;)V
+ * Signature: (ILcom/fuwei/asr/SpeechTranscript/modular/entity/AsrShmResponse;)V
  */
-JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniShmService_JNI_1shmTextPacketSend
+JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniShmService_JNI_1shmTextPacketSend__ILcom_fuwei_asr_SpeechTranscript_modular_entity_AsrShmResponse_2
   (JNIEnv *pEnv, jobject object, jint id, jobject asrResponse) {
 
 	// 填写包数据
@@ -349,7 +349,12 @@ JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniSh
 	LOG_INFO(pEnv, object, info.str().c_str());
 }
 
-JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniShmService_JNI_1shmTextPacketSend
+/*
+ * Class:     com_fuwei_asr_SpeechTranscript_modular_service_JniShmService
+ * Method:    JNI_shmTextPacketSend
+ * Signature: (ILjava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniShmService_JNI_1shmTextPacketSend__ILjava_lang_String_2
   (JNIEnv *pEnv, jobject object, jint id, jstring asrResponseJsonStr) {
 
 	std::stringstream info;
