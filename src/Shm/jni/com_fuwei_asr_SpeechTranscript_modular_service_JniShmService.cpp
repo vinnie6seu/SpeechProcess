@@ -461,6 +461,8 @@ JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniSh
 
 	transAsrResponseData(pEnv, object, json_cstr, asr_trans_result);
 
+	LOG_INFO(pEnv, object, "==== success to trans json to struct ====");
+
 	// 发送包数据
 	shmSpeechToText.writeTextBlockingQueue(shmSpeechToTextHead, id, allBlockingShmQueue[id], asr_trans_result);
 

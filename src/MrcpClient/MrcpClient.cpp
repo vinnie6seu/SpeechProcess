@@ -963,21 +963,46 @@ protected:
 		char speech[SPEECH_LEN] = {'\0'};                // asr 的源语音
 		char text[TEXT_LEN] = {'\0'};                    // 目标文本
 
-		// 1.读取音频文件内容
-		acl::string fileBody;
-		if (acl::ifstream::load(_fileName.c_str(), &fileBody) == false) {
-			logger_error("load %s error", _fileName.c_str());
-			return FAILURE;
+		int data_length = 0;
+
+
+		if (_fileName.find("wav") != std::string::npos) {
+			// 1.读取音频文件内容
+			acl::string fileBody;
+			if (acl::ifstream::load(_fileName.c_str(), &fileBody) == false) {
+				logger_error("load %s error", _fileName.c_str());
+				return FAILURE;
+			}
+
+			// 2.检查 wav 的格式头部
+			wave_pcm_hdr wavHeadStruct;
+			memcpy(&wavHeadStruct, fileBody.c_str(), 44);
+
+			logger("PCM:[%d] channels:[%d] data_size:[%d]", wavHeadStruct.format_tag, wavHeadStruct.channels, wavHeadStruct.data_size);
+
+	        // 3.拷贝语音数据到 speech 数组中
+			memcpy(speech, fileBody.c_str(), wavHeadStruct.size_8 + 8);
+
+			// 4.音频长度
+			data_length = wavHeadStruct.size_8 + 8;
+
+		} else if (_fileName.find("raw") != std::string::npos) {
+			// 1.读取音频文件内容
+			acl::string fileBody;
+			if (acl::ifstream::load(_fileName.c_str(), &fileBody) == false) {
+				logger_error("load %s error", _fileName.c_str());
+				return FAILURE;
+			}
+
+	        // 2.拷贝语音数据到 speech 数组中
+			memcpy(speech, fileBody.c_str(), fileBody.length());
+
+			logger("audio type-raw data_size:[%d]", fileBody.length());
+
+			// 3.音频长度
+			data_length = fileBody.length();
 		}
 
-		// 2.检查 wav 的格式头部
-		wave_pcm_hdr wavHeadStruct;
-		memcpy(&wavHeadStruct, fileBody.c_str(), 44);
-
-		logger("PCM:[%d] channels:[%d] data_size:[%d]", wavHeadStruct.format_tag, wavHeadStruct.channels, wavHeadStruct.data_size);
-
-        // 3.拷贝语音数据到 speech 数组中
-		memcpy(speech, fileBody.c_str(), wavHeadStruct.size_8 + 8);
 
 		// 4.请求 java 收取 asr 结果
 		vector<AsrSpeechTransResult> asr_trans_result_vec;
@@ -990,7 +1015,6 @@ protected:
 		logger("id:[%d] success to send [MSP_AUDIO_INIT] packet", _id);
 
 		// 4.2 continue，向 java 服务端发送[id, MSP_AUDIO_CONTINUE, cur_send_speech_num]，写语音包数据，收取文本包
-		int data_length = wavHeadStruct.size_8 + 8;
 		int FRAME_LEN = SPEECH_PACKET_LEN;
 		int num = 0;
 		while (num * FRAME_LEN <= data_length) {
@@ -1082,9 +1106,9 @@ private:
 	int _id;                        // 当前线程写入数据的 item id
 };
 
-static void test_thread_asr_packet(MrcpClient& mrcpClient, std::string path) {
+static void test_thread_asr_packet(MrcpClient& mrcpClient, std::string& path, std::string& fileSuffix) {
 	std::vector<std::string> fileNameVec;
-	getFileVec(path.c_str(), fileNameVec, ".wav");
+	getFileVec(path.c_str(), fileNameVec, fileSuffix.c_str());
 
 	// 创建一组子线程
 	std::vector<myThreadASRPacket*> threads;
@@ -1108,11 +1132,11 @@ static void test_thread_asr_packet(MrcpClient& mrcpClient, std::string path) {
 
 static void usage(const char* procname)
 {
-	printf("usage: %s [-h help] [-t test_type tts/asr/asr_packet] [-n tts_client_thread_num] [-d asr_client_find_wav_path]\r\n", procname);
+	printf("usage: %s [-h help] [-t test_type tts/asr/asr_packet] [-n tts_client_thread_num] [-d asr_client_find_wav_path] [-x file_suffix .wav/.raw]\r\n", procname);
 	printf("para options:\r\n");
 	printf("\t %s -t tts -n 20\r\n", procname);
-	printf("\t %s -t asr -d .\/\r\n", procname);
-	printf("\t %s -t asr_packet -d .\/\r\n", procname);
+	printf("\t %s -t asr -d .\/ -x .raw\r\n", procname);
+	printf("\t %s -t asr_packet -d .\/ -x .raw\r\n", procname);
 }
 
 int main(int argc, char* argv[]) {
@@ -1121,7 +1145,8 @@ int main(int argc, char* argv[]) {
 	std::string type;
 	int theadNum;
 	std::string path;
-	while ((ch = getopt(argc, argv, "ht:n:d:")) > 0) {
+	std::string fileSuffix;
+	while ((ch = getopt(argc, argv, "ht:n:d:x:")) > 0) {
 		switch (ch) {
 		case 'h':
 			usage(argv[0]);
@@ -1134,6 +1159,9 @@ int main(int argc, char* argv[]) {
 			break;
 		case 'd':
 			path = optarg;
+			break;
+		case 'x':
+			fileSuffix = optarg;
 			break;
 		default:
 			usage(argv[0]);
@@ -1156,7 +1184,7 @@ int main(int argc, char* argv[]) {
 	} else if (type == "asr_packet") {
 		mrcpClient.init(CLIENT_TYPE_ASR_PACKET);
 		// 3.多线程测试 asr 程序，将制度目录下的 wav 音频数据取出[分割数据包]发给 http 服务端，给出语音转成文本
-		test_thread_asr_packet(mrcpClient, path);
+		test_thread_asr_packet(mrcpClient, path, fileSuffix);
 	} else {
 		usage(argv[0]);
 		return 0;
