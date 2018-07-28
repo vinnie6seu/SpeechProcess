@@ -195,18 +195,25 @@ void callback_printLogError(JNIEnv *pEnv, jobject object, const char* error) {
 /*
  * Class:     com_fuwei_asr_SpeechTranscript_modular_service_JniShmService
  * Method:    JNI_shmSpeechPacketReceive
- * Signature: (Ljava/lang/Integer;ZILjava/lang/Integer;Ljava/lang/Boolean;)[B
+ * Signature: (IZILjava/lang/Integer;Ljava/lang/Integer;)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniShmService_JNI_1shmSpeechPacketReceive
   (JNIEnv *pEnv, jobject object, jint id, jboolean is_complete_send, jint total_send_packet_num, jobject batch_num, jobject is_complete_receive) {
+
+	std::stringstream info;
 
 	// 1.读取语音数据
 	char speech[SPEECH_LEN] = {'\0'};
 	int batch_num_int = 0;
 	bool is_complete_receive_bool = false;
+
 	shmSpeechToText.readSpeechNoBlockingQueueBatch(allNoBlockingShmQueue[id], speech, SPEECH_LEN, is_complete_send, total_send_packet_num, batch_num_int, is_complete_receive_bool);
 
 	// 2.修改变量 batch_num 和 is_complete_receive
+	info.clear();
+	info.str("");
+	info << "success to call readSpeechNoBlockingQueueBatch id:[" << id << "] get batch_num_int:[" << batch_num_int << "] get is_complete_receive_bool:[" << is_complete_receive_bool << "]";
+	LOG_INFO(pEnv, object, info.str().c_str());
 
 	// -----------------------------------------
 	jclass integerClass;
@@ -225,27 +232,36 @@ JNIEXPORT jbyteArray JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service
 	}
 
 	pEnv->SetIntField(batch_num, valueIntegerFieldId, batch_num_int);
+	LOG_INFO(pEnv, object, "set batch_num_int");
 	// -----------------------------------------
-	jclass booleanClass;
-	jfieldID valueBooleanFieldId;
+	jclass boolean_to_integerClass;
+	jfieldID valueBoolean_To_IntegerFieldId;
 
-	booleanClass = pEnv->FindClass("java/lang/Boolean");
-	if (booleanClass == NULL) {
+	boolean_to_integerClass = pEnv->FindClass("java/lang/Integer");
+	if (boolean_to_integerClass == NULL) {
 		LOG_INFO(pEnv, object, "FindClass failed");
 		return NULL;
 	}
 
-	valueBooleanFieldId = pEnv->GetFieldID(booleanClass, "value", "Z");
+	valueBoolean_To_IntegerFieldId = pEnv->GetFieldID(boolean_to_integerClass, "value", "I");
 	if (id == NULL) {
 		LOG_INFO(pEnv, object, "GetFiledID failed");
 		return NULL;
 	}
 
-	pEnv->SetIntField(is_complete_receive, valueBooleanFieldId, is_complete_receive_bool);
+	if (is_complete_receive_bool) {
+		int bool_true = 1;
+		pEnv->SetIntField(is_complete_receive, valueBoolean_To_IntegerFieldId, bool_true);
+	} else {
+		int bool_false = 0;
+		pEnv->SetBooleanField(is_complete_receive, valueBoolean_To_IntegerFieldId, bool_false);
+	}
+	LOG_INFO(pEnv, object, "set is_complete_receive");
     // -----------------------------------------
 
 	// 3.返回语音数据
-	std::stringstream info;
+	info.clear();
+	info.str("");
 	info << "success to read speech at id:[" << id << "] batch_num:[" << batch_num_int << "] is_complete_receive:[" << is_complete_receive_bool << "]";
 	LOG_INFO(pEnv, object, info.str().c_str());
 

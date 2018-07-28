@@ -58,7 +58,7 @@ void callback_printLogError(JNIEnv *pEnv, jobject object, const char* error);
 /*
  * Class:     com_fuwei_asr_SpeechTranscript_modular_service_JniShmService
  * Method:    JNI_shmSpeechPacketReceive
- * Signature: (IZILjava/lang/Integer;Ljava/lang/Boolean;)[B
+ * Signature: (IZILjava/lang/Integer;Ljava/lang/Integer;)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniShmService_JNI_1shmSpeechPacketReceive
   (JNIEnv *, jobject, jint, jboolean, jint, jobject, jobject);

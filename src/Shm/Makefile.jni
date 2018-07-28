@@ -7,7 +7,7 @@ ADD_DIRS        := $(MKHOME)/src/Util/Thread/ $(MKHOME)/src/Util/Exception
 include $(MKHOME)/mak/mk_stand_prefix.mak
 
 ##===========================================================
-# 使用了智能指针
+# 使用了智能指针                需要 g++ 版本在4.9以上，4.8会报错
 CXXFLAGS    = -w -g -fPIC -std=c++11
 ##===========================================================
 
