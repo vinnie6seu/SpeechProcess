@@ -349,3 +349,27 @@ JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniSh
 	LOG_INFO(pEnv, object, info.str().c_str());
 }
 
+JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniShmService_JNI_1shmTextPacketSend
+  (JNIEnv *pEnv, jobject object, jint id, jstring asrResponseJsonStr) {
+
+	std::stringstream info;
+
+	// 填写包数据
+	AsrSpeechTransResult asr_trans_result;
+
+	const char *asrResponseJsonStr_cstr = (char *)pEnv->GetStringUTFChars(asrResponseJsonStr, 0);
+	info.clear();
+	info.str("");
+	info << "==== response json string:[" << asrResponseJsonStr_cstr << "] ====";
+	LOG_INFO(pEnv, object, info.str().c_str());
+
+//	transAsrResponseData(pEnv, asrResponseJsonStr, asr_trans_result);
+
+	// 发送包数据
+	shmSpeechToText.writeTextBlockingQueue(shmSpeechToTextHead, id, allBlockingShmQueue[id], asr_trans_result);
+
+	info.clear();
+	info.str("");
+	info << "success to send text packet at id:[" << id << "] text:[" << asr_trans_result._cur_result._transcript << "]";
+	LOG_INFO(pEnv, object, info.str().c_str());
+}

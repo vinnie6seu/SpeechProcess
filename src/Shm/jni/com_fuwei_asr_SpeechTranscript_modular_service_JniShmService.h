@@ -71,6 +71,9 @@ JNIEXPORT jbyteArray JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service
 JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniShmService_JNI_1shmTextPacketSend
   (JNIEnv *, jobject, jint, jobject);
 
+JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniShmService_JNI_1shmTextPacketSend
+  (JNIEnv *, jobject, jint, jstring);
+
 #ifdef __cplusplus
 }
 #endif
