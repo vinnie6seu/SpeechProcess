@@ -6,6 +6,7 @@
  */
 
 #include <sstream>
+#include <string>
 
 #include "Define.hpp"
 #include "Shm/asr/ShmSpeechToText.hpp"
@@ -13,6 +14,9 @@
 #include "com_fuwei_asr_SpeechTranscript_modular_service_JniShmService.h"
 #include "jni_md.h"
 #include "jni.h"
+
+#include "json.hpp"
+using json = nlohmann::json;
 
 // 调用 java 中函数打印日志
 #define LOG_INFO(pEnv, object, info) callback_printLogInfo(pEnv, object, info)
@@ -349,6 +353,93 @@ JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniSh
 	LOG_INFO(pEnv, object, info.str().c_str());
 }
 
+/**
+ * 解析 json
+ */
+static void transAsrResponseData(JNIEnv *pEnv, jobject object, string& json_cstr, AsrSpeechTransResult& asrSpeechTransResult) {
+
+	try {
+		json jsonObject = json::parse(json_cstr);
+
+		if (jsonObject.find("is_exception") != jsonObject.end()) {
+
+			asrSpeechTransResult._is_exception = *jsonObject.find("is_exception");
+		}
+
+		if (jsonObject.find("exception_str") != jsonObject.end()) {
+
+			string tmp = *jsonObject.find("exception_str");
+			memcpy(asrSpeechTransResult._exception_str, tmp.c_str(),
+					sizeof(asrSpeechTransResult._exception_str) - 1);
+		}
+
+		//////
+		if (jsonObject.find("cur_result") != jsonObject.end()) {
+			// there is an entry with key "pi"
+			json resultJsonObject = *jsonObject.find("cur_result");
+
+			if (resultJsonObject.find("transcript") != resultJsonObject.end()) {
+
+				string tmp = *resultJsonObject.find("transcript");
+				memcpy(asrSpeechTransResult._cur_result._transcript, tmp.c_str(),
+						sizeof(asrSpeechTransResult._cur_result._transcript) - 1);
+			}
+
+			if (resultJsonObject.find("stability") != resultJsonObject.end()) {
+
+				asrSpeechTransResult._cur_result._stability =
+						*resultJsonObject.find("stability");
+			}
+
+			if (resultJsonObject.find("is_final") != resultJsonObject.end()) {
+
+				asrSpeechTransResult._cur_result._is_final = *resultJsonObject.find(
+						"is_final");
+			}
+
+			if (resultJsonObject.find("confidence") != resultJsonObject.end()) {
+
+				asrSpeechTransResult._cur_result._confidence =
+						*resultJsonObject.find("confidence");
+			}
+		}
+
+		////////
+		if (jsonObject.find("cur_predict") != jsonObject.end()) {
+			// there is an entry with key "pi"
+			json predictJsonObject = *jsonObject.find("cur_predict");
+
+			if (predictJsonObject.find("transcript") != predictJsonObject.end()) {
+
+				string tmp = *predictJsonObject.find("transcript");
+				memcpy(asrSpeechTransResult._cur_predict._transcript, tmp.c_str(),
+						sizeof(asrSpeechTransResult._cur_predict._transcript) - 1);
+			}
+
+			if (predictJsonObject.find("stability") != predictJsonObject.end()) {
+
+				asrSpeechTransResult._cur_predict._stability =
+						*predictJsonObject.find("stability");
+			}
+
+			if (predictJsonObject.find("is_final") != predictJsonObject.end()) {
+
+				asrSpeechTransResult._cur_predict._is_final =
+						*predictJsonObject.find("is_final");
+			}
+
+			if (predictJsonObject.find("confidence") != predictJsonObject.end()) {
+
+				asrSpeechTransResult._cur_predict._confidence =
+						*predictJsonObject.find("confidence");
+			}
+		}
+	} catch (std::exception& e) {
+		LOG_ERROR(pEnv, object, e.what());
+	}
+
+}
+
 /*
  * Class:     com_fuwei_asr_SpeechTranscript_modular_service_JniShmService
  * Method:    JNI_shmTextPacketSend
@@ -362,13 +453,13 @@ JNIEXPORT void JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service_JniSh
 	// 填写包数据
 	AsrSpeechTransResult asr_trans_result;
 
-	const char *asrResponseJsonStr_cstr = (char *)pEnv->GetStringUTFChars(asrResponseJsonStr, 0);
+	string json_cstr = (char *)pEnv->GetStringUTFChars(asrResponseJsonStr, 0);
 	info.clear();
 	info.str("");
-	info << "==== response json string:[" << asrResponseJsonStr_cstr << "] ====";
+	info << "==== response json string:[" << json_cstr << "] ====";
 	LOG_INFO(pEnv, object, info.str().c_str());
 
-//	transAsrResponseData(pEnv, asrResponseJsonStr, asr_trans_result);
+	transAsrResponseData(pEnv, object, json_cstr, asr_trans_result);
 
 	// 发送包数据
 	shmSpeechToText.writeTextBlockingQueue(shmSpeechToTextHead, id, allBlockingShmQueue[id], asr_trans_result);
