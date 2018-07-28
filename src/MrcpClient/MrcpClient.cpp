@@ -1130,13 +1130,48 @@ static void test_thread_asr_packet(MrcpClient& mrcpClient, std::string& path, st
 
 //////////////////////////////////////////////////////////////////////////
 
+FUN_STATUS test_blockqueue(int blockQueueId) {
+	int _id = blockQueueId;
+	char text[1024 + 1] = {'\0'};
+	vector<AsrSpeechTransResult> asr_trans_result_vec;
+
+	// 0.初始化 mrcp 客户端
+	MrcpClient& _mrcpClient = acl::singleton2<MrcpClient>::get_instance();
+
+	printf("id:[%d] status:[MSP_AUDIO_LAST] start to receive text packet", _id);
+
+	asr_trans_result_vec.clear();
+	if (_mrcpClient.asrTextBlockRecv(_id, asr_trans_result_vec, MSP_AUDIO_LAST) == FAILURE) {
+		printf("fail to call function asrTextBlockRecv, id:[%d] status:[MSP_AUDIO_LAST]", _id);
+		return FAILURE;
+	}
+	printf("id:[%d] status:[MSP_AUDIO_LAST] success to receive text packet:[%d]", _id, asr_trans_result_vec.size());
+
+	for (int i = 0; i < asr_trans_result_vec.size(); i++) {
+		printf("revice speech trans result, cur_result:[%s %f %s %f], cur_predict:[%s %f %s %f]\n",
+				asr_trans_result_vec[i]._cur_result._transcript, asr_trans_result_vec[i]._cur_result._stability,
+				asr_trans_result_vec[i]._cur_result._is_final ? "true" : "false", asr_trans_result_vec[i]._cur_result._confidence,
+				asr_trans_result_vec[i]._cur_predict._transcript, asr_trans_result_vec[i]._cur_predict._stability,
+				asr_trans_result_vec[i]._cur_predict._is_final ? "true" : "false", asr_trans_result_vec[i]._cur_predict._confidence);
+
+		if (asr_trans_result_vec[i]._cur_result._is_final == true) {
+			memcpy(text, asr_trans_result_vec[i]._cur_result._transcript, strlen(asr_trans_result_vec[i]._cur_result._transcript));
+		}
+	}
+
+	printf("text is:[%s]", text);
+
+	return SUCCESS;
+}
+
 static void usage(const char* procname)
 {
-	printf("usage: %s [-h help] [-t test_type tts/asr/asr_packet] [-n tts_client_thread_num] [-d asr_client_find_wav_path] [-x file_suffix .wav/.raw]\r\n", procname);
+	printf("usage: %s [-h help] [-t test_type tts/asr/asr_packet/test_blockqueue] [-n tts_client_thread_num] [-d asr_client_find_wav_path] [-x file_suffix .wav/.raw] [-i block_queue_id 999]\r\n", procname);
 	printf("para options:\r\n");
 	printf("\t %s -t tts -n 20\r\n", procname);
 	printf("\t %s -t asr -d .\/ -x .raw\r\n", procname);
 	printf("\t %s -t asr_packet -d .\/ -x .raw\r\n", procname);
+	printf("\t %s -t test_blockqueue -i 999\r\n", procname);
 }
 
 int main(int argc, char* argv[]) {
@@ -1146,7 +1181,8 @@ int main(int argc, char* argv[]) {
 	int theadNum;
 	std::string path;
 	std::string fileSuffix;
-	while ((ch = getopt(argc, argv, "ht:n:d:x:")) > 0) {
+	int blockQueueId;
+	while ((ch = getopt(argc, argv, "ht:n:d:x:i:")) > 0) {
 		switch (ch) {
 		case 'h':
 			usage(argv[0]);
@@ -1162,6 +1198,9 @@ int main(int argc, char* argv[]) {
 			break;
 		case 'x':
 			fileSuffix = optarg;
+			break;
+		case 'i':
+			blockQueueId = atoi(optarg);
 			break;
 		default:
 			usage(argv[0]);
@@ -1185,6 +1224,8 @@ int main(int argc, char* argv[]) {
 		mrcpClient.init(CLIENT_TYPE_ASR_PACKET);
 		// 3.多线程测试 asr 程序，将制度目录下的 wav 音频数据取出[分割数据包]发给 http 服务端，给出语音转成文本
 		test_thread_asr_packet(mrcpClient, path, fileSuffix);
+	} else if (type == "test_blockqueue") {
+		test_blockqueue(blockQueueId);
 	} else {
 		usage(argv[0]);
 		return 0;
