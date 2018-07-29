@@ -296,7 +296,7 @@ typedef struct {
 } AsrSpeechTransResultFieldIds;
 
 static void transAsrResponseData(JNIEnv *pEnv, jobject& asrResponse, AsrSpeechTransResult& asr_trans_result) {
-
+/*
 	// -----------------------------------------
 	// 1.取出类成员字段 id
 	AsrSpeechTransResultFieldIds asrSpeechTransResultFieldIds;
@@ -347,6 +347,8 @@ static void transAsrResponseData(JNIEnv *pEnv, jobject& asrResponse, AsrSpeechTr
 	memcpy(asr_trans_result._exception_str, exception_cstr, strlen(exception_cstr));
 
 	// -----------------------------------------
+
+*/
 }
 
 /*

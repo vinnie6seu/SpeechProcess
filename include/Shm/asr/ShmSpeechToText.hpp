@@ -97,7 +97,7 @@ typedef struct {
 const int SPEECH_LEN = 638014 + 1;
 const int SPEECH_PACKET_LEN = 3200;
 
-const int TEXT_LEN = 1024 + 1;
+const int TEXT_LEN = 638014 + 1;
 const int TEXT_PACKET_LEN = sizeof(AsrSpeechTransResult);
 
 /////////////////////////////////////////////////////////////////////

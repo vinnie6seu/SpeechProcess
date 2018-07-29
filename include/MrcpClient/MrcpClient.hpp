@@ -102,6 +102,21 @@ public:
      */
 	FUN_STATUS asrExceptionHandle(int id);
 
+
+	/////////////////////////////
+
+	ShmSpeechToText& getShmSpeechToText() {
+		return _shmSpeechToText;
+	}
+
+	ShmSpeechToTextHead* getShmSpeechToTextHead() {
+		return _shmSpeechToTextHead;
+	}
+
+	map<int, std::tr1::shared_ptr<BlockingShmQueue> >& getAllBlockingShmQueue() {
+		return 	_allBlockingShmQueue;
+	}
+
 private:
 	bool _init_flag;                                                             // 已经初始化true，未初始化false
 	CfgUtil _cfgUtil;                                                            // 解析配置文件

@@ -1130,20 +1130,129 @@ static void test_thread_asr_packet(MrcpClient& mrcpClient, std::string& path, st
 
 //////////////////////////////////////////////////////////////////////////
 
-FUN_STATUS test_blockqueue(int blockQueueId) {
+
+// asr 子线程类定义
+class myThreadBlockQueue: public acl::thread {
+public:
+	myThreadBlockQueue(MrcpClient& mrcpClient) : _mrcpClient(mrcpClient) {}
+
+	~myThreadBlockQueue() {}
+
+	void setFileName(std::string fileName) {
+		_fileName = fileName;
+	}
+	void setMode(std::string mode) {
+		_mode = mode;
+	}
+
+protected:
+
+	// 基类纯虚函数，当在主线程中调用线程实例的 start 函数时
+	// 该虚函数将会被调用
+	virtual void* run() {
+		const char* myname = "run";
+
+		printf("%s: thread id: %lu, %lu\r\n", myname, thread_id(), acl::thread::thread_self());
+
+		int blockQueueId = 300;
+
+		if (_mode == "send") {
+
+			AsrSpeechTransResult asr_trans_result;
+			std::string json_cstr = "{\"cur_predict\":{\"confidence\":0.0,\"is_final\":false,\"stability\":0.0},\"cur_result\":{\"confidence\":0.9854616522789001,\"is_final\":true,\"stability\":0.0,\"transcript\":\"how old is the Brooklyn Bridge how old is the Brooklyn Bridge\"},\"is_exception\":false}";
+
+
+			memcpy(asr_trans_result._cur_result._transcript, json_cstr.c_str(), sizeof(asr_trans_result._cur_result._transcript) - 1);
+			asr_trans_result._cur_result._is_final = true;
+
+			cout << "------ send start ------" << endl;
+
+			ShmSpeechToText shmSpeechToText = _mrcpClient.getShmSpeechToText();
+			ShmSpeechToTextHead* shmSpeechToTextHead = _mrcpClient.getShmSpeechToTextHead();
+			map<int, std::tr1::shared_ptr<BlockingShmQueue> > allBlockingShmQueue= _mrcpClient.getAllBlockingShmQueue();
+			if (shmSpeechToText.writeTextBlockingQueue(shmSpeechToTextHead, blockQueueId, allBlockingShmQueue[blockQueueId], asr_trans_result) == FAILURE) {
+				printf("fail to call function asrTextBlockRecv, id:[%d] status:[MSP_AUDIO_LAST]", blockQueueId);
+				return NULL;
+			}
+
+			cout << "------ send success ------" << endl;
+		} else if (_mode == "receive") {
+				int _id = blockQueueId;
+				char text[1024 + 1] = {'\0'};
+				vector<AsrSpeechTransResult> asr_trans_result_vec;
+
+				printf("id:[%d] status:[MSP_AUDIO_LAST] start to receive text packet", _id);
+
+				asr_trans_result_vec.clear();
+				if (_mrcpClient.asrTextBlockRecv(_id, asr_trans_result_vec, MSP_AUDIO_LAST) == FAILURE) {
+					printf("fail to call function asrTextBlockRecv, id:[%d] status:[MSP_AUDIO_LAST]", _id);
+					return NULL;
+				}
+				printf("id:[%d] status:[MSP_AUDIO_LAST] success to receive text packet:[%d]", _id, asr_trans_result_vec.size());
+
+				for (int i = 0; i < asr_trans_result_vec.size(); i++) {
+					printf("revice speech trans result, cur_result:[%s %f %s %f], cur_predict:[%s %f %s %f]\n",
+							asr_trans_result_vec[i]._cur_result._transcript, asr_trans_result_vec[i]._cur_result._stability,
+							asr_trans_result_vec[i]._cur_result._is_final ? "true" : "false", asr_trans_result_vec[i]._cur_result._confidence,
+							asr_trans_result_vec[i]._cur_predict._transcript, asr_trans_result_vec[i]._cur_predict._stability,
+							asr_trans_result_vec[i]._cur_predict._is_final ? "true" : "false", asr_trans_result_vec[i]._cur_predict._confidence);
+
+					if (asr_trans_result_vec[i]._cur_result._is_final == true) {
+						memcpy(text, asr_trans_result_vec[i]._cur_result._transcript, strlen(asr_trans_result_vec[i]._cur_result._transcript));
+					}
+				}
+
+				printf("text is:[%s]", text);
+		}
+
+		return NULL;
+	}
+
+private:
+	MrcpClient& _mrcpClient;
+	std::string _fileName;
+	std::string _mode;
+};
+
+FUN_STATUS test_blockqueue(MrcpClient& mrcpClient, int blockQueueId) {
+
+//	// 创建一组子线程
+//	std::vector<myThreadBlockQueue*> threads;
+//	for (int i = 0; i < 2; i++) {
+//		myThreadBlockQueue* thread = new myThreadBlockQueue(mrcpClient);
+//		threads.push_back(thread);
+//		thread->set_detachable(false);
+//
+//		if ((i & 1) != 0) {
+//			thread->setMode("send");
+//		} else {
+//			thread->setMode("receive");
+//		}
+//
+//		thread->start();
+//	}
+//
+//	// 等待所有子线程正常退出
+//	std::vector<myThreadBlockQueue*>::iterator it = threads.begin();
+//	for (; it != threads.end(); ++it) {
+//		(*it)->wait();
+//		delete (*it);
+//	}
+
 	int _id = blockQueueId;
+
+	printf("step in test_blockqueue, listen id:[%d]", _id);
+
+
 	char text[1024 + 1] = {'\0'};
 	vector<AsrSpeechTransResult> asr_trans_result_vec;
-
-	// 0.初始化 mrcp 客户端
-	MrcpClient& _mrcpClient = acl::singleton2<MrcpClient>::get_instance();
 
 	printf("id:[%d] status:[MSP_AUDIO_LAST] start to receive text packet", _id);
 
 	asr_trans_result_vec.clear();
-	if (_mrcpClient.asrTextBlockRecv(_id, asr_trans_result_vec, MSP_AUDIO_LAST) == FAILURE) {
+	if (mrcpClient.asrTextBlockRecv(_id, asr_trans_result_vec, MSP_AUDIO_LAST) == FAILURE) {
 		printf("fail to call function asrTextBlockRecv, id:[%d] status:[MSP_AUDIO_LAST]", _id);
-		return FAILURE;
+		return NULL;
 	}
 	printf("id:[%d] status:[MSP_AUDIO_LAST] success to receive text packet:[%d]", _id, asr_trans_result_vec.size());
 
@@ -1160,6 +1269,7 @@ FUN_STATUS test_blockqueue(int blockQueueId) {
 	}
 
 	printf("text is:[%s]", text);
+
 
 	return SUCCESS;
 }
@@ -1225,7 +1335,8 @@ int main(int argc, char* argv[]) {
 		// 3.多线程测试 asr 程序，将制度目录下的 wav 音频数据取出[分割数据包]发给 http 服务端，给出语音转成文本
 		test_thread_asr_packet(mrcpClient, path, fileSuffix);
 	} else if (type == "test_blockqueue") {
-		test_blockqueue(blockQueueId);
+		mrcpClient.init(CLIENT_TYPE_ASR_PACKET);
+		test_blockqueue(mrcpClient, blockQueueId);
 	} else {
 		usage(argv[0]);
 		return 0;

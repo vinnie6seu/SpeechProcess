@@ -185,10 +185,12 @@ FUN_STATUS SpeechBootShut::shmSpeechToTextCreate() {
 	shmSpeechToTextHead->_pointIndex = -1;                                       // 上次写入语音的共享内存记录数组索引
 	shmSpeechToTextHead->_offset = sizeof(ShmSpeechToTextHead);
 
-	// 初始化锁用于修改共享内存头部
+	// 线程锁属性PTHREAD_PROCESS_SHARED指示可以在不同进程间使用
 	pthread_mutexattr_t mattr;
 	pthread_mutexattr_init(&mattr);
 	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
+
+	// 初始化锁用于修改共享内存头部
 	if (pthread_mutex_init(&shmSpeechToTextHead->_headMptr, &mattr) != 0) {
 		logger("fail to call pthread_mutex_init for _headMptr ......");
 	}
@@ -198,6 +200,12 @@ FUN_STATUS SpeechBootShut::shmSpeechToTextCreate() {
 
 	// 初始化所有记录的互斥量
 	ShmSpeechToTextItem* start = (ShmSpeechToTextItem*) ((char*) shmSpeechToTextHead + shmSpeechToTextHead->_offset);
+
+
+	// 条件变量属性
+	pthread_condattr_t cattr;
+	pthread_condattr_init(&cattr);
+	pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_SHARED);
 
 	for (int id = 0; id < shmSpeechToTextHead->_total; id++) {
         // 1.
@@ -216,17 +224,25 @@ FUN_STATUS SpeechBootShut::shmSpeechToTextCreate() {
 		}
 
 		// 4.
-		if (pthread_cond_init(&((start + id)->_text_full_cond), NULL) != 0) {
+		if (pthread_cond_init(&((start + id)->_text_full_cond), &cattr) != 0) {
 			logger("fail to call pthread_cond_init for _text_full_cond ......");
 		}
 
 		// 5.
-		if (pthread_cond_init(&((start + id)->_text_empty_cond), NULL) != 0) {
+		if (pthread_cond_init(&((start + id)->_text_empty_cond), &cattr) != 0) {
 			logger("fail to call pthread_cond_init for _text_empty_cond ......");
 		}
 	}
 
 	logger("end to create shm:[speech to text]......");
+
+	/**
+	 * 销毁线程锁属性和条件变量属性
+	 */
+
+	pthread_condattr_destroy(&cattr);
+
+	pthread_mutexattr_destroy(&mattr);
 
 
 	if (_shmSpeechToText.procDetachShm((void*) shmSpeechToTextHead) == FAILURE) {
