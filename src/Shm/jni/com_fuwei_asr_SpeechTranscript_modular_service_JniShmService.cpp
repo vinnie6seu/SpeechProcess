@@ -219,14 +219,15 @@ JNIEXPORT jbyteArray JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service
 	jclass integerClass;
 	jfieldID valueIntegerFieldId;
 
-	integerClass = pEnv->FindClass("java/lang/Integer");
+	// integerClass = pEnv->FindClass("java/lang/Integer");
+	integerClass = pEnv->GetObjectClass(batch_num);
 	if (integerClass == NULL) {
 		LOG_INFO(pEnv, object, "FindClass failed");
 		return NULL;
 	}
 
 	valueIntegerFieldId = pEnv->GetFieldID(integerClass, "value", "I");
-	if (id == NULL) {
+	if (valueIntegerFieldId == NULL) {
 		LOG_INFO(pEnv, object, "GetFiledID failed");
 		return NULL;
 	}
@@ -237,14 +238,15 @@ JNIEXPORT jbyteArray JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service
 	jclass boolean_to_integerClass;
 	jfieldID valueBoolean_To_IntegerFieldId;
 
-	boolean_to_integerClass = pEnv->FindClass("java/lang/Integer");
+	// boolean_to_integerClass = pEnv->FindClass("java/lang/Integer");
+	boolean_to_integerClass = pEnv->GetObjectClass(is_complete_receive);
 	if (boolean_to_integerClass == NULL) {
 		LOG_INFO(pEnv, object, "FindClass failed");
 		return NULL;
 	}
 
 	valueBoolean_To_IntegerFieldId = pEnv->GetFieldID(boolean_to_integerClass, "value", "I");
-	if (id == NULL) {
+	if (valueBoolean_To_IntegerFieldId == NULL) {
 		LOG_INFO(pEnv, object, "GetFiledID failed");
 		return NULL;
 	}
@@ -254,7 +256,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_fuwei_asr_SpeechTranscript_modular_service
 		pEnv->SetIntField(is_complete_receive, valueBoolean_To_IntegerFieldId, bool_true);
 	} else {
 		int bool_false = 0;
-		pEnv->SetBooleanField(is_complete_receive, valueBoolean_To_IntegerFieldId, bool_false);
+		pEnv->SetIntField(is_complete_receive, valueBoolean_To_IntegerFieldId, bool_false);
 	}
 	LOG_INFO(pEnv, object, "set is_complete_receive");
     // -----------------------------------------
