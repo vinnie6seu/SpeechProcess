@@ -5,12 +5,12 @@
  *      Author: yaoqiaobing
  */
 
-/************************************************************************/
-// g++ -DDEBUG_TEST MrcpClient.cpp -I/home/vinnie/my_project/SpeechProcess/include/
-
-// #ifdef DEBUG_TEST
-
 #include <iostream>
+
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <getopt.h>
 
 #include "lib_acl.hpp"
 #include "MrcpClient/MrcpClient.hpp"
@@ -668,7 +668,6 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-// #endif
 
 
 
