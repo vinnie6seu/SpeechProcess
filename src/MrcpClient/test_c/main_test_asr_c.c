@@ -13,9 +13,11 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <stdbool.h>
+#include <time.h>
 
-//#include "lib_acl.hpp"
-#include "MrcpClient/MrcpClient.hpp"
+#include "MrcpClientPara.h"
+
+#include "MrcpClientWrapper.hpp"
 
 FUN_STATUS do_work(struct MrcpClientStruct* mrcpClientStruct, const char* fileName, int* id) {
 	clock_t start, finish;
