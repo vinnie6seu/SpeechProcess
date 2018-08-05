@@ -177,5 +177,4 @@ FUN_STATUS asr_term(struct MrcpClientStruct* mrcpClientStruct, int* id);
 
 /* ============================== 封装后提供给 C 使用 ============================== */
 
-
 #endif /* INCLUDE_MRCPCLIENT_MRCPCLIENT_HPP_ */

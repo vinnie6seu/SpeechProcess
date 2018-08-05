@@ -14,7 +14,7 @@
 #include <getopt.h>
 #include <stdbool.h>
 
-#include "lib_acl.hpp"
+//#include "lib_acl.hpp"
 #include "MrcpClient/MrcpClient.hpp"
 
 FUN_STATUS do_work(struct MrcpClientStruct* mrcpClientStruct, const char* fileName, int* id) {
@@ -22,6 +22,7 @@ FUN_STATUS do_work(struct MrcpClientStruct* mrcpClientStruct, const char* fileNa
 	start = clock();
 
 	//////////////////////////////////////////
+	int i = 0;
 
 	char speech[SPEECH_LEN] = {'\0'};                // asr 的源语音
 	char text[TEXT_LEN] = {'\0'};                    // 目标文本
@@ -92,7 +93,7 @@ FUN_STATUS do_work(struct MrcpClientStruct* mrcpClientStruct, const char* fileNa
 		}
 		printf("id:[%d] status:[MSP_AUDIO_CONTINUE] success to receive text packet:[%d]", *id, asrTransResultLen);
 
-		for (int i = 0; i < asrTransResultLen; i++) {
+		for (i = 0; i < asrTransResultLen; i++) {
 			printf("revice speech trans result, cur_result:[%s %f %s %f], cur_predict:[%s %f %s %f]\n",
 					asrTransResult[i]._cur_result._transcript, asrTransResult[i]._cur_result._stability,
 					asrTransResult[i]._cur_result._is_final ? "true" : "false", asrTransResult[i]._cur_result._confidence,
@@ -122,7 +123,7 @@ FUN_STATUS do_work(struct MrcpClientStruct* mrcpClientStruct, const char* fileNa
 	}
 	printf("id:[%d] status:[MSP_AUDIO_LAST] success to receive text packet:[%d]", *id, asrTransResultLen);
 
-	for (int i = 0; i < asrTransResultLen; i++) {
+	for (i = 0; i < asrTransResultLen; i++) {
 		printf("revice speech trans result, cur_result:[%s %f %s %f], cur_predict:[%s %f %s %f]\n",
 				asrTransResult[i]._cur_result._transcript, asrTransResult[i]._cur_result._stability,
 				asrTransResult[i]._cur_result._is_final ? "true" : "false", asrTransResult[i]._cur_result._confidence,
