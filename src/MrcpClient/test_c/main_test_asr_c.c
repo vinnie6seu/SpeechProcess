@@ -71,7 +71,7 @@ FUN_STATUS do_work(struct MrcpClientStruct* mrcpClientStruct, const char* fileNa
 
 			// 注意这里因为用的是音频文件最后一段肯定不能取整，但是为了满足发送的 packet 大小一致，依然使用SPEECH_PACKET_LEN
 			if (asr_send_speech(mrcpClientStruct, id, speech + num * FRAME_LEN, SPEECH_PACKET_LEN, num, MSP_AUDIO_CONTINUE) != SUCCESS) {
-				printf_error("fail to call function asrSpeechPacketSend, id:[%d] status:[MSP_AUDIO_CONTINUE]", *id);
+				printf("fail to call function asrSpeechPacketSend, id:[%d] status:[MSP_AUDIO_CONTINUE]", *id);
 				return FAILURE;
 			}
 
@@ -80,7 +80,7 @@ FUN_STATUS do_work(struct MrcpClientStruct* mrcpClientStruct, const char* fileNa
 			printf("id:[%d] speech from[%d] to[%d]\n", *id, num * FRAME_LEN, (num + 1) * FRAME_LEN);
 
 			if (asr_send_speech(mrcpClientStruct, id, speech + num * FRAME_LEN, SPEECH_PACKET_LEN, num, MSP_AUDIO_CONTINUE) != SUCCESS) {
-				printf_error("fail to call function asrSpeechPacketSend, id:[%d] status:[MSP_AUDIO_CONTINUE]", *id);
+				printf("fail to call function asrSpeechPacketSend, id:[%d] status:[MSP_AUDIO_CONTINUE]", *id);
 				return FAILURE;
 			}
 
@@ -93,7 +93,7 @@ FUN_STATUS do_work(struct MrcpClientStruct* mrcpClientStruct, const char* fileNa
 		printf("id:[%d] status:[MSP_AUDIO_CONTINUE] start to receive text packet", *id);
         // 中间处理过程收取结果
 		if (asr_recv_trans_result(mrcpClientStruct, id, &asrTransResult, &asrTransResultLen, MSP_AUDIO_CONTINUE) == FAILURE) {
-			printf_error("fail to call function asrTextBlockRecv, id:[%d] status:[MSP_AUDIO_CONTINUE]", *id);
+			printf("fail to call function asrTextBlockRecv, id:[%d] status:[MSP_AUDIO_CONTINUE]", *id);
 			return FAILURE;
 		}
 		printf("id:[%d] status:[MSP_AUDIO_CONTINUE] success to receive text packet:[%d]", *id, asrTransResultLen);
@@ -114,7 +114,7 @@ FUN_STATUS do_work(struct MrcpClientStruct* mrcpClientStruct, const char* fileNa
 
 	// 4.last，告知 java 服务端[id, MSP_AUDIO_LAST, totalSendPacketNum]
 	if (asr_send_speech(mrcpClientStruct, id, NULL, 0, num, MSP_AUDIO_LAST) != SUCCESS) {
-		printf_error("fail to call function asrSpeechPacketSend, id:[%d] status:[MSP_AUDIO_LAST]", *id);
+		printf("fail to call function asrSpeechPacketSend, id:[%d] status:[MSP_AUDIO_LAST]", *id);
 		return FAILURE;
 	}
 	printf("id:[%d] success to send [MSP_AUDIO_LAST] packet", *id);
@@ -123,7 +123,7 @@ FUN_STATUS do_work(struct MrcpClientStruct* mrcpClientStruct, const char* fileNa
 	printf("id:[%d] status:[MSP_AUDIO_LAST] start to receive text packet", *id);
 
 	if (asr_recv_trans_result(mrcpClientStruct, id, &asrTransResult, &asrTransResultLen, MSP_AUDIO_LAST) == FAILURE) {
-		printf_error("fail to call function asrTextBlockRecv, id:[%d] status:[MSP_AUDIO_LAST]", *id);
+		printf("fail to call function asrTextBlockRecv, id:[%d] status:[MSP_AUDIO_LAST]", *id);
 		return FAILURE;
 	}
 	printf("id:[%d] status:[MSP_AUDIO_LAST] success to receive text packet:[%d]", *id, asrTransResultLen);
