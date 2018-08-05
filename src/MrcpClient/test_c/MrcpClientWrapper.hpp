@@ -12,11 +12,13 @@
 
 /* ============================== 封装后提供给 C 使用 ============================== */
 
-struct MrcpClientStruct;
+typedef struct MrcpClientStruct MrcpClientStruct;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+struct MrcpClientStruct* getInstance();
 
 /**
  * 初始化函数

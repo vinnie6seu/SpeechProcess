@@ -18,6 +18,10 @@ struct MrcpClientStruct {
 	MrcpClient* mrcpClient;
 };
 
+struct MrcpClientStruct* getInstance() {
+	return (struct MrcpClientStruct*) malloc(sizeof(struct MrcpClientStruct));
+}
+
 /**
  * 初始化函数
  * 注意：在所有线程前调用该函数

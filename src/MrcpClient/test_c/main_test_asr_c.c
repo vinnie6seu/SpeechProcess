@@ -26,8 +26,11 @@ FUN_STATUS do_work(struct MrcpClientStruct* mrcpClientStruct, const char* fileNa
 	//////////////////////////////////////////
 	int i = 0;
 
-	char speech[SPEECH_LEN] = {'\0'};                // asr 的源语音
-	char text[TEXT_LEN] = {'\0'};                    // 目标文本
+	char speech[SPEECH_LEN];                // asr 的源语音
+	char text[TEXT_LEN];                    // 目标文本
+
+	memset(speech, '\0', SPEECH_LEN);
+	memset(text, '\0', TEXT_LEN);
 
 	int data_length = 0;
 
@@ -149,13 +152,13 @@ FUN_STATUS do_work(struct MrcpClientStruct* mrcpClientStruct, const char* fileNa
 
 int main(int argc, char* argv[]) {
 
-	struct MrcpClientStruct mrcpClientStruct;
+	MrcpClientStruct* mrcpClientStruct = getInstance();
 
 	/**
 	 * 1.初始化函数
 	 * 注意：在所有线程前调用该函数
 	 */
-	asr_init(&mrcpClientStruct);
+	asr_init(mrcpClientStruct);
 
 	////////////////////////////////////////////////////////////////////////////////
 	const char* fileName = "/root/qbyao/my_project/SpeechTranscript/src/main/resources/audio.raw";
@@ -164,7 +167,7 @@ int main(int argc, char* argv[]) {
 	// 2.
 	if (do_work(mrcpClientStruct, fileName, &id) != SUCCESS) {
 		// 3.
-		asr_term(&mrcpClientStruct, &id);
+		asr_term(mrcpClientStruct, &id);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
