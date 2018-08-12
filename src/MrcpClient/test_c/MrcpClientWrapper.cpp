@@ -67,6 +67,12 @@ FUN_STATUS asr_recv_trans_result(struct MrcpClientStruct* mrcpClientStruct, int*
 		*len = asr_trans_result_vec.size();
 
 		*asrTransResult = (AsrSpeechTransResult*) malloc(sizeof(AsrSpeechTransResult) * asr_trans_result_vec.size());
+
+		// 拷贝数据结果
+		AsrSpeechTransResult* dest = (*asrTransResult);
+		for (int i = 0; i < asr_trans_result_vec.size(); i ++) {
+			memcpy(dest + i, &(asr_trans_result_vec[i]), sizeof(AsrSpeechTransResult));
+		}
 	}
 
 	return SUCCESS;

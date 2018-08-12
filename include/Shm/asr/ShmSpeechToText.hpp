@@ -73,7 +73,7 @@ static const char* ASR_SPEECH_PACK_STATUS_ENUM_STRING[] = {
  * 谷歌 asr 根据每个语音片段转义返回的数据包，一般谷歌一次返回两个包，一个是转义结果 result，一个是预测结果 predict
  */
 typedef struct {
-	char _transcript[128 + 1];          // 文本数据
+	char _transcript[512 + 1];          // 文本数据
 	double _stability;                  // 本包数据的稳定性，一般 result 的较高， predict 的较低
 
 	bool _is_final;                     // 谷歌接口以 onComplete 为界，返回的最后结果包，_is_final 为 true，中间过程均是 false
@@ -94,10 +94,17 @@ typedef struct {
 
 /////////////////////////////////////////////////////////////////////
 
-const int SPEECH_LEN = 638014 + 1;
+/**
+ * 对于不是用常量表达式初始化的const对象，可以加上extern放在源文件中，并在头文件中加上extern声明。
+ * 但是对于用常量表达式（即编译器就可以确定的）初始化的const对象，是不可以这么做，而要将定义全部放在头文件中.
+ * 原因是该const对象用常量表达式初始化，那么该对象自身也可以作为一个常量表达式为其他对象初始化，而当它作为常量表达式时，其初始化必须为编译器可见.
+ * 如果将对象的定义放在源文件中，编译阶段还没有链接到它的定义，因此编译器不知道他的具体初始化式，会报错.
+ * 因此将它的定义直接都放在.h头文件中，这样编译器可以直接找到初始化式，同时由于const的特性，const对象在定义它的文件中是局部变量，因此即使多个文件包含该头文件，也不会重定义报错。
+ */
+const int SPEECH_LEN = 960000 + 1;
 const int SPEECH_PACKET_LEN = 3200;
 
-const int TEXT_LEN = 638014 + 1;
+const int TEXT_LEN = 307200 + 1;
 const int TEXT_PACKET_LEN = sizeof(AsrSpeechTransResult);
 
 /////////////////////////////////////////////////////////////////////

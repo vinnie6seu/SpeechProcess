@@ -20,7 +20,7 @@ typedef int FUN_STATUS;
  * 谷歌 asr 根据每个语音片段转义返回的数据包，一般谷歌一次返回两个包，一个是转义结果 result，一个是预测结果 predict
  */
 typedef struct {
-	char _transcript[128 + 1];          // 文本数据
+	char _transcript[512 + 1];          // 文本数据
 	double _stability;                  // 本包数据的稳定性，一般 result 的较高， predict 的较低
 
 	bool _is_final;                     // 谷歌接口以 onComplete 为界，返回的最后结果包，_is_final 为 true，中间过程均是 false
@@ -41,10 +41,10 @@ typedef struct {
 
 /////////////////////////////////////////////////////////////////////
 
-const int SPEECH_LEN = 638014 + 1;
+const int SPEECH_LEN = 960000 + 1;
 const int SPEECH_PACKET_LEN = 3200;
 
-const int TEXT_LEN = 638014 + 1;
+const int TEXT_LEN = 307200 + 1;
 const int TEXT_PACKET_LEN = sizeof(AsrSpeechTransResult);
 
 /////////////////////////////////////////////////////////////////////
